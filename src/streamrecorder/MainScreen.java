@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -17,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JTextField;
 import java.util.Date;
+import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
@@ -25,16 +28,44 @@ import javax.swing.JOptionPane;
  * @author Pinapelz
  */
 public class MainScreen extends javax.swing.JFrame {
-
+String res = "";
+Process record;
     /**
      * Creates new form MainScreen
      */
     public MainScreen() {
         initComponents();
         outputArea.setText(getTimestamp() + " Application Initialized Succsessfully!");
+       
 
     }
+                
+                Thread t = new Thread(new Runnable() {
+                   
+                    public void run() {
+                        try {                       
+                            ProcessBuilder builder = new ProcessBuilder(
+                                    "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
+                            builder.redirectErrorStream(true);
 
+                            record = builder.start();
+                            BufferedReader r = new BufferedReader(new InputStreamReader(record.getInputStream()));
+                            String line;
+                            while (true) {
+                                line = r.readLine();
+                                if (line == null) {
+                                    break;
+                                }
+                                printToConsole(line);
+                            }
+                            record.waitFor();
+                        } catch (IOException ex) {
+                            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -46,7 +77,6 @@ public class MainScreen extends javax.swing.JFrame {
 
         recordButton = new javax.swing.JButton();
         titleLabel = new javax.swing.JLabel();
-        jCheckBox1 = new javax.swing.JCheckBox();
         jScrollPane1 = new javax.swing.JScrollPane();
         outputArea = new javax.swing.JTextArea();
         jButton2 = new javax.swing.JButton();
@@ -55,6 +85,7 @@ public class MainScreen extends javax.swing.JFrame {
         jCheckBox2 = new javax.swing.JCheckBox();
         streamURLInput = new javax.swing.JTextField();
         urlLabel = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -70,8 +101,6 @@ public class MainScreen extends javax.swing.JFrame {
 
         titleLabel.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         titleLabel.setText("Livestream Recorder");
-
-        jCheckBox1.setText("Run quality check before recording begins");
 
         outputArea.setEditable(false);
         outputArea.setColumns(20);
@@ -94,6 +123,13 @@ public class MainScreen extends javax.swing.JFrame {
 
         urlLabel.setText("Stream URL");
 
+        jButton1.setText("STOP");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
 
@@ -110,10 +146,8 @@ public class MainScreen extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jCheckBox1)
-                            .addComponent(jCheckBox2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jCheckBox2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 460, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(titleLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -128,8 +162,10 @@ public class MainScreen extends javax.swing.JFrame {
                                 .addComponent(urlLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(streamURLInput)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 311, Short.MAX_VALUE)
-                        .addComponent(jButton2)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jButton2, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jButton1, javax.swing.GroupLayout.Alignment.TRAILING))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -142,18 +178,21 @@ public class MainScreen extends javax.swing.JFrame {
                         .addComponent(jButton3))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jCheckBox1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBox2)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 163, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(urlLabel)
-                    .addComponent(streamURLInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(recordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE)
-                    .addComponent(jButton2, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(qualityCheckBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 166, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(urlLabel)
+                            .addComponent(streamURLInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(recordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE)
+                            .addComponent(qualityCheckBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jButton1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton2)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -165,8 +204,10 @@ public class MainScreen extends javax.swing.JFrame {
     private void recordButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_recordButtonActionPerformed
         // TODO add your handling code here:
         if (fieldEmpty(streamURLInput)) {
+            convertTStoMP4();
 
         } else {
+
             JOptionPane.showMessageDialog(this,
                     "Please select the directory where you want to save the recording",
                     "Directory Selection",
@@ -177,8 +218,46 @@ public class MainScreen extends javax.swing.JFrame {
             if (option == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 printToConsole("Directory: " + fileChooser.getSelectedFile() + " has been selected");
+                String options = "None Selected";
                 System.out.println(file.getAbsolutePath());
+                try {
+                    ProcessBuilder builder = new ProcessBuilder(
+                            "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText());
+                    builder.redirectErrorStream(true);
+                    Process p;
+                    p = builder.start();
+                    BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                    String line;
+
+                    while (true) {
+
+                        line = r.readLine();
+                        if (line == null) {
+                            break;
+                        }
+                        if (line.startsWith("Available")) {
+                            options = line;
+                        }
+                        printToConsole(line);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                String[] choices = addResolutions(options);
+                res = (String) JOptionPane.showInputDialog(null, "What Resolution Would You Like To Recod At?",
+                        "Resolution", JOptionPane.QUESTION_MESSAGE, null,
+                        choices,
+                        choices[choices.length - 1]);
+
+                printToConsole("Attempting to record stream at: " + res);
+                JOptionPane.showMessageDialog(this,
+                        "Recording will begin after clicking OK.\n Please watch the console and new window for more information");
+                System.out.println(streamURLInput.getText());
+
+                t.start();
+                
             }
+
         }
 
     }//GEN-LAST:event_recordButtonActionPerformed
@@ -190,12 +269,11 @@ public class MainScreen extends javax.swing.JFrame {
             try {
                 // TODO add your handling code here:
                 ProcessBuilder builder = new ProcessBuilder(
-                        "cmd.exe", "/c", "streamlink " + streamURLInput.getText());
+                        "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText());
                 builder.redirectErrorStream(true);
                 Process p;
                 p = builder.start();
                 BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                int count = 0;
                 String line;
                 while (true) {
                     line = r.readLine();
@@ -221,7 +299,7 @@ public class MainScreen extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Testing will begin after clicking OK. Please be patient\nCheck for stutters and adjust setting accordingly \nClose the player anytime to end resolution testing.");
                 ProcessBuilder builder = new ProcessBuilder(
-                        "cmd.exe", "/c", "streamlink " + streamURLInput.getText() + " " + input);
+                        "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText() + " " + input);
                 builder.redirectErrorStream(true);
                 Process p;
                 p = builder.start();
@@ -242,6 +320,13 @@ public class MainScreen extends javax.swing.JFrame {
 
         }
     }//GEN-LAST:event_qualityCheckBtnActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+       record.destroy();
+        t.interrupt();
+        convertTStoMP4();
+    }//GEN-LAST:event_jButton1ActionPerformed
     private boolean fieldEmpty(JTextField textField) {
         if (textField.getText().equals("")) {
             System.out.println("Input blank");
@@ -260,6 +345,26 @@ public class MainScreen extends javax.swing.JFrame {
 
     private void printToConsole(String text) {
         outputArea.append("\n" + getTimestamp() + " " + text);
+    }
+
+    private void convertTStoMP4() {
+        try {
+            ProcessBuilder builder = new ProcessBuilder(
+                    "cmd.exe", "/c", "streamlink\\ffmpeg\\ffmpeg.exe -i .\\\\rec1.ts -c copy -bsf:a aac_adtstoasc -f mp4 -movflags faststart+separate_moof .\\\\rec1.mp4");
+            builder.redirectErrorStream(true);
+            Process p = builder.start();
+            BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while (true) {
+                line = r.readLine();
+                if (line == null) {
+                    break;
+                }
+                System.out.println(line);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -321,9 +426,9 @@ public class MainScreen extends javax.swing.JFrame {
         return resolution.toArray(new String[0]);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
-    private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBox jCheckBox2;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
