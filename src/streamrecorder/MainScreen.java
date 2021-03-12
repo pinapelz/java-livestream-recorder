@@ -12,6 +12,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -20,16 +23,22 @@ import java.util.logging.Logger;
 import javax.swing.JTextField;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.text.DefaultCaret;
 
 /**
  *
  * @author Pinapelz
  */
 public class MainScreen extends javax.swing.JFrame {
+
+    private static final long MEGABYTE = 1024L * 1024L;
     boolean recording = false;
     String res = "";
+    int minutes = 0;
+    int hours = 0;
     Process record;
     String recordingPath = "";
+    boolean beginRecording = false;
     int totalSecs = 0;
     String recordingFileName = "rec1.mp4";
 
@@ -41,11 +50,13 @@ public class MainScreen extends javax.swing.JFrame {
         outputArea.setText(getTimestamp() + " Application Initialized Succsessfully!");
         useTimeBox.setEnabled(false);
         recordLengthField.setEnabled(false);
-
+        DefaultCaret caret = (DefaultCaret) outputArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
         this.setTitle("Live Stream Recorder V0.1b");
         this.setLocationRelativeTo(null);
         stopwatch.start();
         clock.start();
+        t.start();
     }
     Thread clock = new Thread(new Runnable() {
         public void run() {
@@ -56,20 +67,38 @@ public class MainScreen extends javax.swing.JFrame {
             }
         }
     });
+
+    public static long bytesToMeg(long bytes) {
+        return bytes / MEGABYTE;
+    }
     Thread stopwatch = new Thread(new Runnable() {
         public void run() {
-            int minutes = 0;
-            int hours = 0;
-            if(recording){
-                try {
-                    Thread.sleep(1000);
-                    totalSecs++;
-                    hours = totalSecs / 3600;
-                    minutes = (totalSecs % 3600) / 60;
-                    totalSecs = totalSecs % 60;
-                    timeElapsedLabel.setText(String.format("%02d:%02d:%02d", hours, minutes, totalSecs));
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+            while (true) {
+                System.out.println("Keeping the stopwatch thread alive");
+                if (recording) {
+                    Path path = Paths.get("rec1.ts");
+                    long bytes = 0;
+                    try {
+                        bytes = Files.size(path);
+                        fileSizeLabel.setText(bytesToMeg(bytes) + " MB");
+                    } catch (IOException ex) {
+                        Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    try {
+                        Thread.sleep(1000);
+                        totalSecs++;
+                        if (totalSecs == 60) {
+                            totalSecs = 0;
+                            minutes++;
+                        }
+                        if (minutes == 60) {
+                            minutes = 0;
+                            hours++;
+                        }
+                        timeElapsedLabel.setText(String.format("%02d:%02d:%02d", hours, minutes, totalSecs));
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
         }
@@ -77,26 +106,37 @@ public class MainScreen extends javax.swing.JFrame {
     Thread t = new Thread(new Runnable() {
 
         public void run() {
-            try {
-                ProcessBuilder builder = new ProcessBuilder(
-                        "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
-                builder.redirectErrorStream(true);
+            System.out.println("Keeping the thread alive");
+            while (true) {
+                System.out.println("Keeping the thread alive");
+                if (beginRecording == true) {
+                    System.out.println("its true");
+                    try {
+                        ProcessBuilder builder = new ProcessBuilder(
+                                "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
+                        builder.redirectErrorStream(true);
 
-                record = builder.start();
-                BufferedReader r = new BufferedReader(new InputStreamReader(record.getInputStream()));
-                String line;
-                while (true) {
-                    line = r.readLine();
-                    if (line == null) {
-                        break;
+                        record = builder.start();
+                        BufferedReader r = new BufferedReader(new InputStreamReader(record.getInputStream()));
+                        String line;
+                        while (true) {
+                            line = r.readLine();
+                            if (line == null) {
+                                break;
+                            }
+                            printToConsole(line);
+                        }
+                        record.waitFor();
+                        beginRecording = false;
+                    } catch (IOException ex) {
+                        Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                        beginRecording = false;
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                        beginRecording = false;
                     }
-                    printToConsole(line);
+
                 }
-                record.waitFor();
-            } catch (IOException ex) {
-                Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     });
@@ -154,6 +194,11 @@ public class MainScreen extends javax.swing.JFrame {
         jScrollPane1.setViewportView(outputArea);
 
         jButton2.setText("Settings");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         githubButton.setText("Github");
         githubButton.addActionListener(new java.awt.event.ActionListener() {
@@ -218,32 +263,32 @@ public class MainScreen extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
                                 .addComponent(recordButton, javax.swing.GroupLayout.PREFERRED_SIZE, 195, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(qualityCheckBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                .addComponent(qualityCheckBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(useTimeBox)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(recordLengthField, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(jLabel7)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(timeLabel))))
+                            .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(urlLabel)
                                     .addComponent(jLabel8))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(recordingNameField)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(recordingNameField, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
                                     .addComponent(streamURLInput))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(useTimeBox)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(recordLengthField, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel7)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(timeLabel)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(stopButton, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)
+                            .addComponent(stopButton, javax.swing.GroupLayout.DEFAULT_SIZE, 147, Short.MAX_VALUE)
                             .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -365,9 +410,8 @@ public class MainScreen extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Recording will begin after clicking OK.\n Please watch the console and new window for more information");
                 System.out.println(streamURLInput.getText());
-                recording= true;
-                
-                t.start();
+                recording = true;
+                beginRecording = true;
 
             }
 
@@ -415,7 +459,7 @@ public class MainScreen extends javax.swing.JFrame {
                         "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText() + " " + input);
                 builder.redirectErrorStream(true);
                 Process p;
-                
+
                 p = builder.start();
                 BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
                 String line;
@@ -438,6 +482,8 @@ public class MainScreen extends javax.swing.JFrame {
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
         // TODO add your handling code here:
         recording = false;
+        minutes = 0;
+        hours = 0;
         printToConsole("Attempting to kill task");
         record.destroy();
         t.interrupt();
@@ -463,6 +509,10 @@ public class MainScreen extends javax.swing.JFrame {
         }
         File recordingMP4 = new File("rec1.mp4");
         recordingMP4.renameTo(new File(recordingPath + "/" + recordingFileName));
+        /* JOptionPane.showMessageDialog(this,
+                "Process Complete. Please re-open program to record another stream!",
+                "Thank You",
+                JOptionPane.PLAIN_MESSAGE);*/
     }//GEN-LAST:event_stopButtonActionPerformed
 
     private void githubButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_githubButtonActionPerformed
@@ -477,6 +527,11 @@ public class MainScreen extends javax.swing.JFrame {
         }
 
     }//GEN-LAST:event_githubButtonActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        recording = true;
+    }//GEN-LAST:event_jButton2ActionPerformed
     private boolean fieldEmpty(JTextField textField) {
         if (textField.getText().equals("")) {
             System.out.println("Input blank");
