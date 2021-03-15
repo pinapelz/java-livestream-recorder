@@ -8,6 +8,8 @@ package streamrecorder;
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -36,6 +38,7 @@ public class MainScreen extends javax.swing.JFrame {
     private static final long MEGABYTE = 1024L * 1024L;
     boolean recording = false;
     String res = "";
+    int usedNumber = 1;
     int minutes = 0;
     int hours = 0;
     Process record;
@@ -94,7 +97,7 @@ public class MainScreen extends javax.swing.JFrame {
     Thread stopwatch = new Thread(new Runnable() {
         public void run() {
             while (true) {
-                System.out.println("Keeping the stopwatch thread alive");
+                System.out.println(" ");
                 if (recording) {
                     Path path = Paths.get("rec1.ts");
                     long bytes = 0;
@@ -126,12 +129,13 @@ public class MainScreen extends javax.swing.JFrame {
     Thread t = new Thread(new Runnable() {
 
         public void run() {
-            System.out.println("Keeping the thread alive");
+            System.out.println(" ");
             while (true) {
-                System.out.println("Keeping the thread alive");
+                System.out.println(" ");
                 if (beginRecording == true) {
                     System.out.println("its true");
                     try {
+                        printToConsole("streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
                         ProcessBuilder builder = new ProcessBuilder(
                                 "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
                         builder.redirectErrorStream(true);
@@ -165,14 +169,17 @@ public class MainScreen extends javax.swing.JFrame {
         recordButton.setEnabled(false);
         qualityCheckBtn.setEnabled(false);
         timedRecordButton.setEnabled(false);
-        settingsButton.setEnabled(false);
+        quickRecordButton.setEnabled(false);
+        quickRecordButton.setEnabled(false);
+
     }
 
     void enableButtonsForRecord() {
         recordButton.setEnabled(true);
         qualityCheckBtn.setEnabled(true);
         timedRecordButton.setEnabled(true);
-        settingsButton.setEnabled(true);
+        quickRecordButton.setEnabled(true);
+        quickRecordButton.setEnabled(true);
     }
 
     /**
@@ -191,7 +198,7 @@ public class MainScreen extends javax.swing.JFrame {
         titleLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         outputArea = new javax.swing.JTextArea();
-        settingsButton = new javax.swing.JButton();
+        quickRecordButton = new javax.swing.JButton();
         githubButton = new javax.swing.JButton();
         qualityCheckBtn = new javax.swing.JButton();
         streamURLInput = new javax.swing.JTextField();
@@ -207,6 +214,7 @@ public class MainScreen extends javax.swing.JFrame {
         jLabel8 = new javax.swing.JLabel();
         timedRecordButton = new javax.swing.JButton();
         scheduleText = new javax.swing.JLabel();
+        presetSetting = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -243,10 +251,11 @@ public class MainScreen extends javax.swing.JFrame {
         outputArea.setRows(5);
         jScrollPane1.setViewportView(outputArea);
 
-        settingsButton.setText("Download VLC");
-        settingsButton.addActionListener(new java.awt.event.ActionListener() {
+        quickRecordButton.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        quickRecordButton.setText("Preset Record");
+        quickRecordButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                settingsButtonActionPerformed(evt);
+                quickRecordButtonActionPerformed(evt);
             }
         });
 
@@ -313,6 +322,13 @@ public class MainScreen extends javax.swing.JFrame {
         scheduleText.setFont(new java.awt.Font("Dialog", 1, 24)); // NOI18N
         scheduleText.setText("No Recordings Scheduled");
 
+        presetSetting.setText("Preset Settings");
+        presetSetting.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                presetSettingActionPerformed(evt);
+            }
+        });
+
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
 
@@ -359,19 +375,24 @@ public class MainScreen extends javax.swing.JFrame {
                                         .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                                             .addComponent(jLabel8)
                                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(recordingNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel3)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(fileSizeLabel)
-                                        .addGap(114, 114, 114)
-                                        .addComponent(scheduleText)))
-                                .addGap(31, 31, 31)))
+                                            .addComponent(recordingNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addGroup(layout.createSequentialGroup()
+                                                    .addComponent(jLabel3)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(fileSizeLabel)
+                                                    .addGap(114, 114, 114))
+                                                .addGroup(layout.createSequentialGroup()
+                                                    .addComponent(presetSetting, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                    .addGap(93, 93, 93)))
+                                            .addComponent(scheduleText))))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(stopButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(settingsButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(quickRecordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addGap(0, 28, Short.MAX_VALUE)
+                                .addGap(0, 0, Short.MAX_VALUE)
                                 .addComponent(titleLabel))
                             .addComponent(githubButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap())
@@ -385,20 +406,13 @@ public class MainScreen extends javax.swing.JFrame {
                     .addComponent(timeElapsedLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(githubButton)
-                        .addComponent(scheduleText))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(jLabel3)
-                        .addComponent(fileSizeLabel)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(stopButton, javax.swing.GroupLayout.DEFAULT_SIZE, 116, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel3)
+                            .addComponent(fileSizeLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(settingsButton))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(presetSetting)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(urlLabel)
                             .addComponent(streamURLInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -416,7 +430,15 @@ public class MainScreen extends javax.swing.JFrame {
                                 .addComponent(timedRecordButton))
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                 .addComponent(recordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE)
-                                .addComponent(qualityCheckBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                                .addComponent(qualityCheckBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(githubButton)
+                            .addComponent(scheduleText))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(stopButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(quickRecordButton)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -480,6 +502,7 @@ public class MainScreen extends javax.swing.JFrame {
                         choices[choices.length - 1]);
 
                 printToConsole("Attempting to record stream at: " + res);
+                scheduleText.setText("Currently Recording");
                 recording = true;
                 beginRecording = true;
 
@@ -551,7 +574,7 @@ public class MainScreen extends javax.swing.JFrame {
 
     private void stopButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stopButtonActionPerformed
         // TODO add your handling code here:
-
+        scheduleText.setText("No Recordings Scheduled");
         enableButtonsForRecord();
         recording = false;
         minutes = 0;
@@ -560,6 +583,25 @@ public class MainScreen extends javax.swing.JFrame {
         record.destroy();
         t.interrupt();
         totalSecs = 0;
+        File file = new File("defaultName.txt");
+        String st;
+        if (fieldEmpty(recordingNameField)) {
+            printToConsole("Name Field is Empty!");
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                while ((st = br.readLine()) != null) {
+                    recordingFileName = st + ".mp4";
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        else {
+            recordingFileName = recordingNameField.getText();
+        }
+        if (!recordingFileName.contains(".mp4")) {
+            recordingFileName = recordingFileName + ".mp4";
+        }
         ProcessBuilder builder = new ProcessBuilder(
                 "cmd.exe", "/c", "taskkill /F /IM \"python.exe\" /T");
         builder.redirectErrorStream(true);
@@ -579,9 +621,11 @@ public class MainScreen extends javax.swing.JFrame {
         } else {
             printToConsole("Failed to delete temporary TS file: " + recordingTS.getName());
         }
+        printToConsole("Conversion to MP4 with file name");
         File recordingMP4 = new File("rec1.mp4");
+        printToConsole(recordingPath + "/" + recordingFileName);
         recordingMP4.renameTo(new File(recordingPath + "/" + recordingFileName));
-                if (scheduledTask) {
+        if (scheduledTask) {
             JOptionPane.showMessageDialog(this,
                     "Task complete please re-open program to use again!");
             System.exit(0);
@@ -601,17 +645,35 @@ public class MainScreen extends javax.swing.JFrame {
 
     }//GEN-LAST:event_githubButtonActionPerformed
 
-    private void settingsButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_settingsButtonActionPerformed
-        // TODO add your handling code here:
-                    JOptionPane.showMessageDialog(this,
-                    "VLC Media Player is required for recording! Please download it");
+    private void quickRecordButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_quickRecordButtonActionPerformed
+        disableButtonsForRecord();
+        File file = new File("defaultPath.txt");
+        String st;
+        String st2;
         try {
-            Desktop.getDesktop().browse(new URL("https://www.videolan.org/vlc/index.html").toURI());
-        } catch (Exception ex) {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            while ((st = br.readLine()) != null) {
+               printToConsole(st);
+               st = st.replaceAll("\\\\", "/");
+                recordingPath = st;
+            }
+        } catch (IOException ex) {
             Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-    }//GEN-LAST:event_settingsButtonActionPerformed
+        File file2 = new File("defaultRes.txt");
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file2));
+            while ((st2 = br.readLine()) != null) {
+                res = st2;
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        printToConsole("Attempting to record stream at: " + res);
+        scheduleText.setText("Currently Recording");
+        recording = true;
+        beginRecording = true;
+    }//GEN-LAST:event_quickRecordButtonActionPerformed
 
     private void timedRecordButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_timedRecordButtonActionPerformed
         // TODO add your handling code here:
@@ -629,7 +691,16 @@ public class MainScreen extends javax.swing.JFrame {
         } else {
             startTime = JOptionPane.showInputDialog("What time would you like to start recording? (24 Hours including seconds)");
             LocalTime t = LocalTime.parse(startTime);
-            res = "best";
+            File file2 = new File("defaultRes.txt");
+            String st2;
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(file2));
+                while ((st2 = br.readLine()) != null) {
+                    res = st2;
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+            }
             printToConsole("Scheduled Recording queued, currently waiting for time");
             scheduler.start();
             JFileChooser fileChooser = new JFileChooser();
@@ -652,6 +723,55 @@ public class MainScreen extends javax.swing.JFrame {
     private void streamURLInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_streamURLInputActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_streamURLInputActionPerformed
+
+    private void presetSettingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_presetSettingActionPerformed
+        // TODO add your handling code here:
+        JOptionPane.showMessageDialog(this,
+                "Please select the default directory where you want to save your recording",
+                "Directory Selection",
+                JOptionPane.PLAIN_MESSAGE);
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            try {
+                FileWriter myWriter = new FileWriter("defaultPath.txt");
+                File file = fileChooser.getSelectedFile();
+                myWriter.write(file.getAbsolutePath());
+                myWriter.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
+            String resolution = JOptionPane.showInputDialog(this, "What resoluton do you want to record at? eg.1080p");
+            try {
+                FileWriter myWriter = new FileWriter("defaultRes.txt");
+                myWriter.write(resolution);
+                myWriter.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
+            String defaultFileName = JOptionPane.showInputDialog(this, "What do you want the default file name to be (don't include .mp4)");
+            try {
+                FileWriter myWriter = new FileWriter("defaultName.txt");
+                myWriter.write(defaultFileName);
+                myWriter.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "Preset settings have been saved",
+                    "Succsess!",
+                    JOptionPane.PLAIN_MESSAGE);
+        } else {
+
+        }
+
+
+    }//GEN-LAST:event_presetSettingActionPerformed
     private boolean fieldEmpty(JTextField textField) {
         if (textField.getText().equals("")) {
             System.out.println("Input blank");
@@ -686,9 +806,11 @@ public class MainScreen extends javax.swing.JFrame {
                     break;
                 }
                 System.out.println(line);
+
             }
         } catch (IOException ex) {
-            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MainScreen.class
+                    .getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -706,16 +828,21 @@ public class MainScreen extends javax.swing.JFrame {
                 if ("Nimbus".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
+
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MainScreen.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MainScreen.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MainScreen.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(MainScreen.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(MainScreen.class
+                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
@@ -748,6 +875,13 @@ public class MainScreen extends javax.swing.JFrame {
         if (text.contains("1080p")) {
             resolution.add("1080p");
         }
+        if (text.contains("720p60")) {
+            resolution.add("720p60");
+        }
+        if (text.contains("1080p60")) {
+            resolution.add("1080p60");
+        }
+
         return resolution.toArray(new String[0]);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -765,11 +899,12 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextArea outputArea;
+    private javax.swing.JButton presetSetting;
     private javax.swing.JButton qualityCheckBtn;
+    private javax.swing.JButton quickRecordButton;
     private javax.swing.JButton recordButton;
     private javax.swing.JTextField recordingNameField;
     private javax.swing.JLabel scheduleText;
-    private javax.swing.JButton settingsButton;
     private javax.swing.JButton stopButton;
     private javax.swing.JTextField streamURLInput;
     private javax.swing.JLabel timeElapsedLabel;
