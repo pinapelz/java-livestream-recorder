@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package streamrecorder;
+package main.java;
 
 import java.awt.Desktop;
 import java.io.BufferedReader;
@@ -57,7 +57,7 @@ public class MainScreen extends javax.swing.JFrame {
         outputArea.setText(getTimestamp() + " Application Initialized Succsessfully!");
         DefaultCaret caret = (DefaultCaret) outputArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        this.setTitle("Live Stream Recorder V0.1b");
+        this.setTitle("Live Stream Recorder V0.2b");
         this.setLocationRelativeTo(null);
         this.setResizable(false);
         stopwatch.start();
@@ -99,6 +99,7 @@ public class MainScreen extends javax.swing.JFrame {
             while (true) {
                 System.out.println(" ");
                 if (recording) {
+                    
                     Path path = Paths.get("rec1.ts");
                     long bytes = 0;
                     try {
@@ -133,31 +134,46 @@ public class MainScreen extends javax.swing.JFrame {
             while (true) {
                 System.out.println(" ");
                 if (beginRecording == true) {
-                    System.out.println("its true");
+                    FileWriter currentLogWriter = null;
                     try {
-                        printToConsole("streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
-                        ProcessBuilder builder = new ProcessBuilder(
-                                "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
-                        builder.redirectErrorStream(true);
-
-                        record = builder.start();
-                        BufferedReader r = new BufferedReader(new InputStreamReader(record.getInputStream()));
-                        String line;
-                        while (true) {
-                            line = r.readLine();
-                            if (line == null) {
-                                break;
+                        currentLogWriter = new FileWriter("currentLog.txt");
+                        System.out.println("its true");
+                        try {
+                            printToConsole("streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
+                            ProcessBuilder builder = new ProcessBuilder(
+                                    "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
+                            builder.redirectErrorStream(true);
+                            
+                            record = builder.start();
+                            BufferedReader r = new BufferedReader(new InputStreamReader(record.getInputStream()));
+                            String line;
+                            while (true) {
+                                line = r.readLine();
+                                if (line == null) {
+                                    break;
+                                }
+                                printToConsole(line); 
+                                currentLogWriter.append(line+"\n");
+                                //barse to the txt file too in future
                             }
-                            printToConsole(line);
+                            currentLogWriter.close();
+                            record.waitFor();
+                            beginRecording = false;
+                        } catch (IOException ex) {
+                            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                            beginRecording = false;
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                            beginRecording = false;
                         }
-                        record.waitFor();
-                        beginRecording = false;
                     } catch (IOException ex) {
                         Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
-                        beginRecording = false;
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
-                        beginRecording = false;
+                    } finally {
+                        try {
+                            currentLogWriter.close();
+                        } catch (IOException ex) {
+                            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
 
                 }
@@ -194,6 +210,10 @@ public class MainScreen extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JSeparator();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuBar2 = new javax.swing.JMenuBar();
+        jMenu3 = new javax.swing.JMenu();
+        jMenu4 = new javax.swing.JMenu();
         recordButton = new javax.swing.JButton();
         titleLabel = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -215,6 +235,7 @@ public class MainScreen extends javax.swing.JFrame {
         timedRecordButton = new javax.swing.JButton();
         scheduleText = new javax.swing.JLabel();
         presetSetting = new javax.swing.JButton();
+        presetButton = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -231,6 +252,14 @@ public class MainScreen extends javax.swing.JFrame {
             }
         ));
         jScrollPane2.setViewportView(jTable1);
+
+        jMenuItem1.setText("jMenuItem1");
+
+        jMenu3.setText("File");
+        jMenuBar2.add(jMenu3);
+
+        jMenu4.setText("Edit");
+        jMenuBar2.add(jMenu4);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -280,8 +309,8 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
-        urlLabel.setFont(new java.awt.Font("Dialog", 1, 18)); // NOI18N
-        urlLabel.setText("Stream URL");
+        urlLabel.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        urlLabel.setText("Name/Stream URL");
 
         stopButton.setFont(new java.awt.Font("Dialog", 1, 36)); // NOI18N
         stopButton.setText("STOP");
@@ -329,6 +358,14 @@ public class MainScreen extends javax.swing.JFrame {
             }
         });
 
+        presetButton.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
+        presetButton.setText("Select Preset");
+        presetButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                presetButtonActionPerformed(evt);
+            }
+        });
+
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
 
@@ -352,49 +389,45 @@ public class MainScreen extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(qualityCheckBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(timeLabel)
-                                        .addGap(49, 49, 49))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(timedRecordButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addGap(45, 45, 45))))
+                                .addComponent(timedRecordButton, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(27, 27, 27)
+                                .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, 177, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(timeLabel))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(layout.createSequentialGroup()
                                         .addComponent(jLabel5)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                         .addComponent(timeElapsedLabel))
-                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                            .addComponent(urlLabel)
-                                            .addGap(23, 23, 23)
-                                            .addComponent(streamURLInput))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addComponent(jLabel3)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(fileSizeLabel)
+                                                .addGap(114, 114, 114))
+                                            .addGroup(layout.createSequentialGroup()
+                                                .addComponent(presetSetting, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                .addGap(101, 101, 101)))
+                                        .addComponent(scheduleText))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addComponent(jLabel8)
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(recordingNameField, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                                .addGroup(layout.createSequentialGroup()
-                                                    .addComponent(jLabel3)
-                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                    .addComponent(fileSizeLabel)
-                                                    .addGap(114, 114, 114))
-                                                .addGroup(layout.createSequentialGroup()
-                                                    .addComponent(presetSetting, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                                    .addGap(93, 93, 93)))
-                                            .addComponent(scheduleText))))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(stopButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(quickRecordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(titleLabel))
-                            .addComponent(githubButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                            .addComponent(urlLabel))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(recordingNameField, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
+                                            .addComponent(streamURLInput))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(presetButton, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(titleLabel, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(githubButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(stopButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(quickRecordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 171, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -412,22 +445,25 @@ public class MainScreen extends javax.swing.JFrame {
                             .addComponent(fileSizeLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(presetSetting)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(urlLabel)
-                            .addComponent(streamURLInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(recordingNameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel8))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 10, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                    .addComponent(timeLabel)
-                                    .addComponent(jLabel7))
+                                    .addComponent(urlLabel)
+                                    .addComponent(streamURLInput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(timedRecordButton))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(recordingNameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel8)))
+                            .addComponent(presetButton, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(30, 30, 30)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                    .addComponent(timedRecordButton)
+                                    .addComponent(timeLabel)
+                                    .addComponent(jLabel7)))
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                 .addComponent(recordButton, javax.swing.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE)
                                 .addComponent(qualityCheckBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
@@ -450,6 +486,13 @@ public class MainScreen extends javax.swing.JFrame {
     private void recordButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_recordButtonActionPerformed
         // TODO add your handling code here:
         disableButtonsForRecord();
+        File recordLog = new File("currentLog.txt");
+        if(recordLog.delete()){
+            System.out.println("Last log deleted");
+        }
+        else{
+            System.out.println("Failed to delete last log");
+        }
         if (fieldEmpty(recordingNameField)) {
             recordingFileName = "recording.mp4";
         } else {
@@ -480,9 +523,7 @@ public class MainScreen extends javax.swing.JFrame {
                     p = builder.start();
                     BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
                     String line;
-
                     while (true) {
-
                         line = r.readLine();
                         if (line == null) {
                             break;
@@ -772,6 +813,11 @@ public class MainScreen extends javax.swing.JFrame {
 
 
     }//GEN-LAST:event_presetSettingActionPerformed
+
+    private void presetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_presetButtonActionPerformed
+        // TODO add your handling code here:
+        new SelectorScreen().setVisible(true);
+    }//GEN-LAST:event_presetButtonActionPerformed
     private boolean fieldEmpty(JTextField textField) {
         if (textField.getText().equals("")) {
             System.out.println("Input blank");
@@ -818,11 +864,7 @@ public class MainScreen extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
+
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -893,12 +935,17 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuBar jMenuBar2;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextArea outputArea;
+    private javax.swing.JButton presetButton;
     private javax.swing.JButton presetSetting;
     private javax.swing.JButton qualityCheckBtn;
     private javax.swing.JButton quickRecordButton;

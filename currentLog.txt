@@ -1,0 +1,3 @@
+[cli][info] Found matching plugin youtube for URL https://www.youtube.com/channel/UChgTyjG-pdNvxxhdsXfHQ5Q
+[cli][info] Available streams: 144p (worst), 240p, 360p, 480p, 720p, 1080p (best)
+[cli][info] Opening stream: 1080p (hls)
