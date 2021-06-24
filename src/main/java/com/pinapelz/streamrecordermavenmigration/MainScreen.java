@@ -139,9 +139,9 @@ public class MainScreen extends javax.swing.JFrame {
                         currentLogWriter = new FileWriter("currentLog.txt");
                         System.out.println("its true");
                         try {
-                            printToConsole("streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
+                            printToConsole("streamlink --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
                             ProcessBuilder builder = new ProcessBuilder(
-                                    "cmd.exe", "/c", "streamlink\\streamlink.bat --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
+                                    "cmd.exe", "/c", "streamlink --hls-live-restart " + streamURLInput.getText() + " " + res + " -o rec1.ts");
                             builder.redirectErrorStream(true);
                             
                             record = builder.start();
@@ -359,7 +359,7 @@ public class MainScreen extends javax.swing.JFrame {
         });
 
         presetButton.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
-        presetButton.setText("Select Preset");
+        presetButton.setText("Install Streamlink");
         presetButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 presetButtonActionPerformed(evt);
@@ -410,18 +410,18 @@ public class MainScreen extends javax.swing.JFrame {
                                             .addGroup(layout.createSequentialGroup()
                                                 .addComponent(presetSetting, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                                 .addGap(101, 101, 101)))
-                                        .addComponent(scheduleText))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addComponent(jLabel8)
-                                            .addComponent(urlLabel))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(recordingNameField, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
-                                            .addComponent(streamURLInput))
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(presetButton, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(0, 0, Short.MAX_VALUE)))
+                                        .addComponent(scheduleText)))
+                                .addGap(0, 272, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel8)
+                                    .addComponent(urlLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(recordingNameField, javax.swing.GroupLayout.DEFAULT_SIZE, 478, Short.MAX_VALUE)
+                                    .addComponent(streamURLInput))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(presetButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(titleLabel, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -517,7 +517,7 @@ public class MainScreen extends javax.swing.JFrame {
                 recordingPath = file.getAbsolutePath();
                 try {
                     ProcessBuilder builder = new ProcessBuilder(
-                            "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText());
+                            "cmd.exe", "/c", "streamlink " + streamURLInput.getText());
                     builder.redirectErrorStream(true);
                     Process p;
                     p = builder.start();
@@ -560,7 +560,7 @@ public class MainScreen extends javax.swing.JFrame {
             try {
                 // TODO add your handling code here:
                 ProcessBuilder builder = new ProcessBuilder(
-                        "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText());
+                        "cmd.exe", "/c", "streamlink " + streamURLInput.getText());
                 builder.redirectErrorStream(true);
                 Process p;
                 p = builder.start();
@@ -590,7 +590,7 @@ public class MainScreen extends javax.swing.JFrame {
                 JOptionPane.showMessageDialog(this,
                         "Testing will begin after clicking OK. Please be patient\nCheck for stutters and adjust setting accordingly \nClose the player anytime to end resolution testing.");
                 ProcessBuilder builder = new ProcessBuilder(
-                        "cmd.exe", "/c", "streamlink\\streamlink.bat " + streamURLInput.getText() + " " + input);
+                        "cmd.exe", "/c", "streamlink " + streamURLInput.getText() + " " + input);
                 builder.redirectErrorStream(true);
                 Process p;
 
@@ -816,7 +816,14 @@ public class MainScreen extends javax.swing.JFrame {
 
     private void presetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_presetButtonActionPerformed
         // TODO add your handling code here:
-        new SelectorScreen().setVisible(true);
+                    ProcessBuilder builder = new ProcessBuilder(
+                    "cmd.exe", "/c", "streamlinkInstaller.exe");
+            builder.redirectErrorStream(true);
+        try {
+            Process p = builder.start();
+        } catch (IOException ex) {
+            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_presetButtonActionPerformed
     private boolean fieldEmpty(JTextField textField) {
         if (textField.getText().equals("")) {
@@ -841,7 +848,7 @@ public class MainScreen extends javax.swing.JFrame {
     private void convertTStoMP4() {
         try {
             ProcessBuilder builder = new ProcessBuilder(
-                    "cmd.exe", "/c", "streamlink\\ffmpeg\\ffmpeg.exe -i .\\\\rec1.ts -c copy -bsf:a aac_adtstoasc -f mp4 -movflags faststart+separate_moof .\\\\rec1.mp4");
+                    "cmd.exe", "/c", "ffmpeg\\ffmpeg.exe -i .\\\\rec1.ts -c copy -bsf:a aac_adtstoasc -f mp4 -movflags faststart+separate_moof .\\\\rec1.mp4");
             builder.redirectErrorStream(true);
             Process p = builder.start();
             BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
